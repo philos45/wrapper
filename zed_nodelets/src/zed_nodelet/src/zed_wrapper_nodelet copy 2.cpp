@@ -108,10 +108,12 @@ void ZEDWrapperNodelet::onInit()
   string left_raw_topic = leftTopicRoot + raw_suffix + img_raw_topic;
   string right_topic = rightTopicRoot + img_topic;
   string right_raw_topic = rightTopicRoot + raw_suffix + img_raw_topic;
-  string rgb_topic = rgbTopicRoot + img_topic;
-  string rgb_raw_topic = rgbTopicRoot + raw_suffix + img_raw_topic;
-  string stereo_topic = stereoTopicRoot + img_topic;
-  string stereo_raw_topic = stereoTopicRoot + raw_suffix + img_raw_topic;
+
+
+  string rgb_topic = rightTopicRoot + img_topic;
+  string rgb_raw_topic =rightTopicRoot + raw_suffix + img_raw_topic;
+  string stereo_topic = rightTopicRoot + img_topic;
+  string stereo_raw_topic =rightTopicRoot + raw_suffix + img_raw_topic;
 
   // Set the disparity topic name
   std::string disparityTopic = "disparity/disparity_image";
@@ -401,12 +403,6 @@ void ZEDWrapperNodelet::onInit()
   // Image publishers
   image_transport::ImageTransport it_zed(mNhNs);
 
-  mPubRgb = it_zed.advertiseCamera(rgb_topic, 1);  // rgb
-  NODELET_INFO_STREAM("Advertised on topic " << mPubRgb.getTopic());
-  NODELET_INFO_STREAM("Advertised on topic " << mPubRgb.getInfoTopic());
-  mPubRawRgb = it_zed.advertiseCamera(rgb_raw_topic, 1);  // rgb raw
-  NODELET_INFO_STREAM("Advertised on topic " << mPubRawRgb.getTopic());
-  NODELET_INFO_STREAM("Advertised on topic " << mPubRawRgb.getInfoTopic());
   mPubLeft = it_zed.advertiseCamera(left_topic, 1);  // left
   NODELET_INFO_STREAM("Advertised on topic " << mPubLeft.getTopic());
   NODELET_INFO_STREAM("Advertised on topic " << mPubLeft.getInfoTopic());
@@ -420,26 +416,22 @@ void ZEDWrapperNodelet::onInit()
   NODELET_INFO_STREAM("Advertised on topic " << mPubRawRight.getTopic());
   NODELET_INFO_STREAM("Advertised on topic " << mPubRawRight.getInfoTopic());
 
-  mPubDepth = it_zed.advertiseCamera(depth_topic_root, 1);  // depth
-  NODELET_INFO_STREAM("Advertised on topic " << mPubDepth.getTopic());
-  NODELET_INFO_STREAM("Advertised on topic " << mPubDepth.getInfoTopic());
+  // mPubDepth = it_zed.advertiseCamera(depth_topic_root, 1);  // depth
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubDepth.getTopic());
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubDepth.getInfoTopic());
 
-  mPubStereo = it_zed.advertise(stereo_topic, 1);
-  NODELET_INFO_STREAM("Advertised on topic " << mPubStereo.getTopic());
-  mPubRawStereo = it_zed.advertise(stereo_raw_topic, 1);
-  NODELET_INFO_STREAM("Advertised on topic " << mPubRawStereo.getTopic());
+  // mPubRawStereo = it_zed.advertise(stereo_raw_topic, 1);
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubRawStereo.getTopic());
 
   // Confidence Map publisher
-  mPubConfMap = mNhNs.advertise<sensor_msgs::Image>(conf_map_topic, 1);  // confidence map
-  NODELET_INFO_STREAM("Advertised on topic " << mPubConfMap.getTopic());
+  // mPubConfMap = mNhNs.advertise<sensor_msgs::Image>(conf_map_topic, 1);  // confidence map
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubConfMap.getTopic());
 
   // Disparity publisher
-  mPubDisparity = mNhNs.advertise<stereo_msgs::DisparityImage>(disparityTopic, static_cast<int>(mVideoDepthFreq));
-  NODELET_INFO_STREAM("Advertised on topic " << mPubDisparity.getTopic());
 
   // PointCloud publishers
-  mPubCloud = mNhNs.advertise<sensor_msgs::PointCloud2>(pointcloud_topic, 1);
-  NODELET_INFO_STREAM("Advertised on topic " << mPubCloud.getTopic());
+  // mPubCloud = mNhNs.advertise<sensor_msgs::PointCloud2>(pointcloud_topic, 1);
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubCloud.getTopic());
 
   if (mMappingEnabled)
   {
@@ -455,22 +447,13 @@ void ZEDWrapperNodelet::onInit()
   }
 
   // Odometry and Pose publisher
-  mPubPose = mNhNs.advertise<geometry_msgs::PoseStamped>(poseTopic, 1);
-  NODELET_INFO_STREAM("Advertised on topic " << mPubPose.getTopic());
 
-  mPubPoseCov = mNhNs.advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_cov_topic, 1);
-  NODELET_INFO_STREAM("Advertised on topic " << mPubPoseCov.getTopic());
+  // mPubPoseCov = mNhNs.advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_cov_topic, 1);
 
-  mPubOdom = mNhNs.advertise<nav_msgs::Odometry>(odometryTopic, 1);
-  NODELET_INFO_STREAM("Advertised on topic " << mPubOdom.getTopic());
 
   // Camera Path
   if (mPathPubRate > 0)
   {
-    mPubOdomPath = mNhNs.advertise<nav_msgs::Path>(odom_path_topic, 1, true);
-    NODELET_INFO_STREAM("Advertised on topic " << mPubOdomPath.getTopic());
-    mPubMapPath = mNhNs.advertise<nav_msgs::Path>(map_path_topic, 1, true);
-    NODELET_INFO_STREAM("Advertised on topic " << mPubMapPath.getTopic());
 
     mPathTimer = mNhNs.createTimer(ros::Duration(1.0 / mPathPubRate), &ZEDWrapperNodelet::callback_pubPath, this);
 
@@ -492,35 +475,21 @@ void ZEDWrapperNodelet::onInit()
   if (mZedRealCamModel != sl::MODEL::ZED)
   {
     // IMU Publishers
-    mPubImu = mNhNs.advertise<sensor_msgs::Imu>(imu_topic, 1 /*static_cast<int>(mSensPubRate)*/);
-    NODELET_INFO_STREAM("Advertised on topic " << mPubImu.getTopic());
-    mPubImuRaw = mNhNs.advertise<sensor_msgs::Imu>(imu_topic_raw, 1 /*static_cast<int>(mSensPubRate)*/);
-    NODELET_INFO_STREAM("Advertised on topic " << mPubImuRaw.getTopic());
-    mPubImuMag = mNhNs.advertise<sensor_msgs::MagneticField>(imu_mag_topic, 1 /*MAG_FREQ*/);
-    NODELET_INFO_STREAM("Advertised on topic " << mPubImuMag.getTopic());
 
     if (mZedRealCamModel == sl::MODEL::ZED2)
     {
       // IMU temperature sensor
-      mPubImuTemp = mNhNs.advertise<sensor_msgs::Temperature>(imu_temp_topic, 1 /*static_cast<int>(mSensPubRate)*/);
-      NODELET_INFO_STREAM("Advertised on topic " << mPubImuTemp.getTopic());
 
       // Atmospheric pressure
-      mPubPressure = mNhNs.advertise<sensor_msgs::FluidPressure>(pressure_topic, 1 /*static_cast<int>(BARO_FREQ)*/);
-      NODELET_INFO_STREAM("Advertised on topic " << mPubPressure.getTopic());
 
       // CMOS sensor temperatures
-      mPubTempL = mNhNs.advertise<sensor_msgs::Temperature>(temp_topic_left, 1 /*static_cast<int>(BARO_FREQ)*/);
-      NODELET_INFO_STREAM("Advertised on topic " << mPubTempL.getTopic());
-      mPubTempR = mNhNs.advertise<sensor_msgs::Temperature>(temp_topic_right, 1 /*static_cast<int>(BARO_FREQ)*/);
-      NODELET_INFO_STREAM("Advertised on topic " << mPubTempR.getTopic());
     }
 
     // Publish camera imu transform in a latched topic
     if (mZedRealCamModel != sl::MODEL::ZED)
     {
-      string cam_imu_tr_topic = "left_cam_imu_transform";
-      mPubCamImuTransf = mNhNs.advertise<geometry_msgs::Transform>(cam_imu_tr_topic, 1, true);
+      // string cam_imu_tr_topic = "left_cam_imu_transform";
+      // mPubCamImuTransf = mNhNs.advertise<geometry_msgs::Transform>(cam_imu_tr_topic, 1, true);
 
       sl::Orientation sl_rot = mSlCamImuTransf.getOrientation();
       sl::Translation sl_tr = mSlCamImuTransf.getTranslation();
@@ -539,9 +508,9 @@ void ZEDWrapperNodelet::onInit()
       NODELET_DEBUG("Camera-IMU Rotation: \n %s", sl_rot.getRotationMatrix().getInfos().c_str());
       NODELET_DEBUG("Camera-IMU Translation: \n %g %g %g", sl_tr.x, sl_tr.y, sl_tr.z);
 
-      mPubCamImuTransf.publish(mCameraImuTransfMgs);
+      // mPubCamImuTransf.publish(mCameraImuTransfMgs);
 
-      NODELET_INFO_STREAM("Advertised on topic " << mPubCamImuTransf.getTopic() << " [LATCHED]");
+      // NODELET_INFO_STREAM("Advertised on topic " << mPubCamImuTransf.getTopic() << " [LATCHED]");
     }
 
     if (!mSvoMode && !mSensTimestampSync)
@@ -1656,7 +1625,7 @@ void ZEDWrapperNodelet::publishOdom(tf2::Transform odom2baseTransf, sl::Pose& sl
   }
 
   // Publish odometry message
-  mPubOdom.publish(odomMsg);
+  // mPubOdom.publish(odomMsg);
 }
 
 void ZEDWrapperNodelet::publishPose(ros::Time t)
@@ -1690,18 +1659,7 @@ void ZEDWrapperNodelet::publishPose(ros::Time t)
   pose.orientation.z = base2frame.rotation.z;
   pose.orientation.w = base2frame.rotation.w;
 
-  if (mPubPose.getNumSubscribers() > 0)
-  {
-    geometry_msgs::PoseStamped poseNoCov;
-
-    poseNoCov.header = header;
-    poseNoCov.pose = pose;
-
-    // Publish pose stamped message
-    mPubPose.publish(poseNoCov);
-  }
-
-  if (mPubPoseCov.getNumSubscribers() > 0)
+  if (false)
   {
     geometry_msgs::PoseWithCovarianceStampedPtr poseCovMsg =
         boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
@@ -1729,7 +1687,7 @@ void ZEDWrapperNodelet::publishPose(ros::Time t)
     }
 
     // Publish pose with covariance stamped message
-    mPubPoseCov.publish(poseCovMsg);
+    // mPubPoseCov.publish(poseCovMsg);
   }
 }
 
@@ -1864,7 +1822,7 @@ void ZEDWrapperNodelet::publishDepth(sensor_msgs::ImagePtr imgMsgPtr, sl::Mat de
   {
     // NODELET_INFO("Using float32");
     sl_tools::imageToROSmsg(imgMsgPtr, depth, mDepthOptFrameId, t);
-    mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
+    // mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
 
     return;
   }
@@ -1899,11 +1857,11 @@ void ZEDWrapperNodelet::publishDepth(sensor_msgs::ImagePtr imgMsgPtr, sl::Mat de
   {
     *(data++) = static_cast<uint16_t>(std::round(*(depthDataPtr++) * 1000));  // in mm, rounded
   }
-  mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
+  // mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
 #else
   // NODELET_INFO("Using depth16");
   sl_tools::imageToROSmsg(imgMsgPtr, depth, mDepthOptFrameId, t);
-  mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
+  // mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
 #endif
 }
 
@@ -1935,7 +1893,6 @@ void ZEDWrapperNodelet::publishDisparity(sl::Mat disparity, ros::Time t)
   disparityMsg->min_disparity = disparityMsg->f * disparityMsg->T / mZed.getInitParameters().depth_minimum_distance;
   disparityMsg->max_disparity = disparityMsg->f * disparityMsg->T / mZed.getInitParameters().depth_maximum_distance;
 
-  mPubDisparity.publish(disparityMsg);
 }
 
 void ZEDWrapperNodelet::pointcloud_thread_func()
@@ -2026,7 +1983,7 @@ void ZEDWrapperNodelet::publishPointCloud()
   memcpy(ptCloudPtr, (float*)cpu_cloud, 4 * ptsCount * sizeof(float));
 
   // Pointcloud publishing
-  mPubCloud.publish(pointcloudMsg);
+  // mPubCloud.publish(pointcloudMsg);
 }
 
 void ZEDWrapperNodelet::callback_pubFusedPointCloud(const ros::TimerEvent& e)
@@ -2527,17 +2484,17 @@ void ZEDWrapperNodelet::callback_pubVideoDepth(const ros::TimerEvent& e)
 {
   static sl::Timestamp lastZedTs = 0;  // Used to calculate stable publish frequency
 
-  uint32_t rgbSubnumber = mPubRgb.getNumSubscribers();
-  uint32_t rgbRawSubnumber = mPubRawRgb.getNumSubscribers();
+  uint32_t rgbSubnumber = mPubRight.getNumSubscribers();
+  uint32_t rgbRawSubnumber =mPubRight.getNumSubscribers();
   uint32_t leftSubnumber = mPubLeft.getNumSubscribers();
   uint32_t leftRawSubnumber = mPubRawLeft.getNumSubscribers();
   uint32_t rightSubnumber = mPubRight.getNumSubscribers();
   uint32_t rightRawSubnumber = mPubRawRight.getNumSubscribers();
-  uint32_t depthSubnumber = mPubDepth.getNumSubscribers();
-  uint32_t disparitySubnumber = mPubDisparity.getNumSubscribers();
-  uint32_t confMapSubnumber = mPubConfMap.getNumSubscribers();
-  uint32_t stereoSubNumber = mPubStereo.getNumSubscribers();
-  uint32_t stereoRawSubNumber = mPubRawStereo.getNumSubscribers();
+  uint32_t depthSubnumber =0;
+  uint32_t disparitySubnumber = 0;
+  uint32_t confMapSubnumber = 0;
+  uint32_t stereoRawSubNumber = mPubRight.getNumSubscribers();
+  uint32_t stereoSubNumber =  mPubRight.getNumSubscribers();
 
   uint32_t tot_sub = rgbSubnumber + rgbRawSubnumber + leftSubnumber + leftRawSubnumber + rightSubnumber +
                      rightRawSubnumber +  depthSubnumber +
@@ -2723,7 +2680,6 @@ void ZEDWrapperNodelet::callback_pubVideoDepth(const ros::TimerEvent& e)
   {
     sensor_msgs::ImagePtr stereoImgMsg = boost::make_shared<sensor_msgs::Image>();
     sl_tools::imagesToROSmsg(stereoImgMsg, mat_left, mat_right, mCameraFrameId, stamp);
-    mPubStereo.publish(stereoImgMsg);
   }
 
   // Stereo RAW couple side-by-side
@@ -2731,7 +2687,7 @@ void ZEDWrapperNodelet::callback_pubVideoDepth(const ros::TimerEvent& e)
   {
     sensor_msgs::ImagePtr rawStereoImgMsg = boost::make_shared<sensor_msgs::Image>();
     sl_tools::imagesToROSmsg(rawStereoImgMsg, mat_left_raw, mat_right_raw, mCameraFrameId, stamp);
-    mPubRawStereo.publish(rawStereoImgMsg);
+    // mPubRawStereo.publish(rawStereoImgMsg);
   }
 
   // Publish the depth image if someone has subscribed to
@@ -2752,14 +2708,14 @@ void ZEDWrapperNodelet::callback_pubVideoDepth(const ros::TimerEvent& e)
   {
     sensor_msgs::ImagePtr confMapMsg = boost::make_shared<sensor_msgs::Image>();
     sl_tools::imageToROSmsg(confMapMsg, mat_conf, mConfidenceOptFrameId, stamp);
-    mPubConfMap.publish(confMapMsg);
+    // mPubConfMap.publish(confMapMsg);
   }
 }
 
 void ZEDWrapperNodelet::callback_pubPath(const ros::TimerEvent& e)
 {
-  uint32_t mapPathSub = mPubMapPath.getNumSubscribers();
-  uint32_t odomPathSub = mPubOdomPath.getNumSubscribers();
+  uint32_t mapPathSub =0;
+  uint32_t odomPathSub = 0;
 
   geometry_msgs::PoseStamped odomPose;
   geometry_msgs::PoseStamped mapPose;
@@ -2816,15 +2772,6 @@ void ZEDWrapperNodelet::callback_pubPath(const ros::TimerEvent& e)
     mOdomPath.push_back(odomPose);
   }
 
-  if (mapPathSub > 0)
-  {
-    nav_msgs::PathPtr mapPath = boost::make_shared<nav_msgs::Path>();
-    mapPath->header.frame_id = mMapFrameId;
-    mapPath->header.stamp = mFrameTimestamp;
-    mapPath->poses = mMapPath;
-
-    mPubMapPath.publish(mapPath);
-  }
 
   if (odomPathSub > 0)
   {
@@ -2833,7 +2780,7 @@ void ZEDWrapperNodelet::callback_pubPath(const ros::TimerEvent& e)
     odomPath->header.stamp = mFrameTimestamp;
     odomPath->poses = mOdomPath;
 
-    mPubOdomPath.publish(odomPath);
+    // mPubOdomPath.publish(odomPath);
   }
 }
 
@@ -2854,8 +2801,8 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
 {
   // NODELET_INFO("publishSensData");
 
-  uint32_t imu_SubNumber = mPubImu.getNumSubscribers();
-  uint32_t imu_RawSubNumber = mPubImuRaw.getNumSubscribers();
+  uint32_t imu_SubNumber = 0;
+  uint32_t imu_RawSubNumber = 0;
   uint32_t imu_TempSubNumber = 0;
   uint32_t imu_MagSubNumber = 0;
   uint32_t pressSubNumber = 0;
@@ -2864,11 +2811,9 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
 
   if (mZedRealCamModel == sl::MODEL::ZED2)
   {
-    imu_TempSubNumber = mPubImuTemp.getNumSubscribers();
-    imu_MagSubNumber = mPubImuMag.getNumSubscribers();
-    pressSubNumber = mPubPressure.getNumSubscribers();
-    tempLeftSubNumber = mPubTempL.getNumSubscribers();
-    tempRightSubNumber = mPubTempR.getNumSubscribers();
+    imu_TempSubNumber = 0;
+    imu_MagSubNumber = 0;
+    pressSubNumber = 0;
   }
 
   uint32_t tot_sub = imu_SubNumber + imu_RawSubNumber + imu_TempSubNumber + imu_MagSubNumber + pressSubNumber +
@@ -2984,8 +2929,7 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
     imuTempMsg->temperature = static_cast<double>(imu_temp);
     imuTempMsg->variance = 0.0;
 
-    sensors_data_published = true;
-    mPubImuTemp.publish(imuTempMsg);
+    sensors_data_published = false;
   }
   else
   {
@@ -3014,8 +2958,7 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
       pressMsg->fluid_pressure = sens_data.barometer.pressure * 1e-2;  // Pascal
       pressMsg->variance = 1.0585e-2;
 
-      sensors_data_published = true;
-      mPubPressure.publish(pressMsg);
+      sensors_data_published = false;
     }
 
     if (tempLeftSubNumber > 0)
@@ -3037,8 +2980,7 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
       tempLeftMsg->temperature = static_cast<double>(mTempLeft);
       tempLeftMsg->variance = 0.0;
 
-      sensors_data_published = true;
-      mPubTempL.publish(tempLeftMsg);
+      sensors_data_published = false;
     }
 
     if (tempRightSubNumber > 0)
@@ -3060,8 +3002,7 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
       tempRightMsg->temperature = static_cast<double>(mTempRight);
       tempRightMsg->variance = 0.0;
 
-      sensors_data_published = true;
-      mPubTempR.publish(tempRightMsg);
+      sensors_data_published = false;
     }
   }
   else
@@ -3102,8 +3043,7 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
       magMsg->magnetic_field_covariance[7] = 0.0f;
       magMsg->magnetic_field_covariance[8] = 0.047e-6;
 
-      sensors_data_published = true;
-      mPubImuMag.publish(magMsg);
+      sensors_data_published = false;
     }
   }
   else
@@ -3180,8 +3120,8 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
           sens_data.imu.angular_velocity_covariance.r[r * 3 + 2] * DEG2RAD * DEG2RAD;
     }
 
-    sensors_data_published = true;
-    mPubImu.publish(imuMsg);
+    sensors_data_published =false;
+    // mPubImu.publish(imuMsg);
   }
   else
   {
@@ -3234,8 +3174,7 @@ void ZEDWrapperNodelet::publishSensData(ros::Time t)
     // Orientation data is not available in "data_raw" -> See ROS REP145
     // http://www.ros.org/reps/rep-0145.html#topics
     imuRawMsg->orientation_covariance[0] = -1;
-    sensors_data_published = true;
-    mPubImuRaw.publish(imuRawMsg);
+    sensors_data_published = false;
   }
 
   // ----> Update Diagnostic
@@ -3316,23 +3255,23 @@ void ZEDWrapperNodelet::device_poll_thread_func()
   while (mNhNs.ok())
   {
     // Check for subscribers
-    uint32_t rgbSubnumber = mPubRgb.getNumSubscribers();
-    uint32_t rgbRawSubnumber = mPubRawRgb.getNumSubscribers();
+    uint32_t rgbSubnumber =mPubRight.getNumSubscribers();
+    uint32_t rgbRawSubnumber = mPubRight.getNumSubscribers();
     uint32_t leftSubnumber = mPubLeft.getNumSubscribers();
     uint32_t leftRawSubnumber = mPubRawLeft.getNumSubscribers();
     uint32_t rightSubnumber = mPubRight.getNumSubscribers();
     uint32_t rightRawSubnumber = mPubRawRight.getNumSubscribers();
-    uint32_t depthSubnumber = mPubDepth.getNumSubscribers();
-    uint32_t disparitySubnumber = mPubDisparity.getNumSubscribers();
-    uint32_t cloudSubnumber = mPubCloud.getNumSubscribers();
-    uint32_t fusedCloudSubnumber = mPubFusedCloud.getNumSubscribers();
-    uint32_t poseSubnumber = mPubPose.getNumSubscribers();
-    uint32_t poseCovSubnumber = mPubPoseCov.getNumSubscribers();
-    uint32_t odomSubnumber = mPubOdom.getNumSubscribers();
-    uint32_t confMapSubnumber = mPubConfMap.getNumSubscribers();
-    uint32_t pathSubNumber = mPubMapPath.getNumSubscribers() + mPubOdomPath.getNumSubscribers();
-    uint32_t stereoSubNumber = mPubStereo.getNumSubscribers();
-    uint32_t stereoRawSubNumber = mPubRawStereo.getNumSubscribers();
+    uint32_t depthSubnumber = 0;
+    uint32_t disparitySubnumber = 0;
+    uint32_t cloudSubnumber = 0;
+    uint32_t fusedCloudSubnumber = 0;
+    uint32_t poseSubnumber = 0;
+    uint32_t poseCovSubnumber = 0;
+    uint32_t odomSubnumber = 0;
+    uint32_t confMapSubnumber = 0;
+    uint32_t pathSubNumber = 0;
+    uint32_t stereoRawSubNumber = mPubRight.getNumSubscribers();
+    uint32_t stereoSubNumber =mPubRight.getNumSubscribers();
 
     uint32_t objDetSubnumber = 0;
     if (mObjDetEnabled && mObjDetRunning)
