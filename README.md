@@ -1,6 +1,9 @@
 0907.
 no stereo, imu, temper ...
 
+0909.
+ver 0907 + no depth, pose, con.. 
+
 
 
 
