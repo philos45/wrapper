@@ -416,22 +416,22 @@ void ZEDWrapperNodelet::onInit()
   NODELET_INFO_STREAM("Advertised on topic " << mPubRawRight.getTopic());
   NODELET_INFO_STREAM("Advertised on topic " << mPubRawRight.getInfoTopic());
 
-  mPubDepth = it_zed.advertiseCamera(depth_topic_root, 1);  // depth
-  NODELET_INFO_STREAM("Advertised on topic " << mPubDepth.getTopic());
-  NODELET_INFO_STREAM("Advertised on topic " << mPubDepth.getInfoTopic());
+  // mPubDepth = it_zed.advertiseCamera(depth_topic_root, 1);  // depth
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubDepth.getTopic());
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubDepth.getInfoTopic());
 
   // mPubRawStereo = it_zed.advertise(stereo_raw_topic, 1);
   // NODELET_INFO_STREAM("Advertised on topic " << mPubRawStereo.getTopic());
 
   // Confidence Map publisher
-  mPubConfMap = mNhNs.advertise<sensor_msgs::Image>(conf_map_topic, 1);  // confidence map
-  NODELET_INFO_STREAM("Advertised on topic " << mPubConfMap.getTopic());
+  // mPubConfMap = mNhNs.advertise<sensor_msgs::Image>(conf_map_topic, 1);  // confidence map
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubConfMap.getTopic());
 
   // Disparity publisher
 
   // PointCloud publishers
-  mPubCloud = mNhNs.advertise<sensor_msgs::PointCloud2>(pointcloud_topic, 1);
-  NODELET_INFO_STREAM("Advertised on topic " << mPubCloud.getTopic());
+  // mPubCloud = mNhNs.advertise<sensor_msgs::PointCloud2>(pointcloud_topic, 1);
+  // NODELET_INFO_STREAM("Advertised on topic " << mPubCloud.getTopic());
 
   if (mMappingEnabled)
   {
@@ -448,7 +448,7 @@ void ZEDWrapperNodelet::onInit()
 
   // Odometry and Pose publisher
 
-  mPubPoseCov = mNhNs.advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_cov_topic, 1);
+  // mPubPoseCov = mNhNs.advertise<geometry_msgs::PoseWithCovarianceStamped>(pose_cov_topic, 1);
 
 
   // Camera Path
@@ -488,8 +488,8 @@ void ZEDWrapperNodelet::onInit()
     // Publish camera imu transform in a latched topic
     if (mZedRealCamModel != sl::MODEL::ZED)
     {
-      string cam_imu_tr_topic = "left_cam_imu_transform";
-      mPubCamImuTransf = mNhNs.advertise<geometry_msgs::Transform>(cam_imu_tr_topic, 1, true);
+      // string cam_imu_tr_topic = "left_cam_imu_transform";
+      // mPubCamImuTransf = mNhNs.advertise<geometry_msgs::Transform>(cam_imu_tr_topic, 1, true);
 
       sl::Orientation sl_rot = mSlCamImuTransf.getOrientation();
       sl::Translation sl_tr = mSlCamImuTransf.getTranslation();
@@ -508,9 +508,9 @@ void ZEDWrapperNodelet::onInit()
       NODELET_DEBUG("Camera-IMU Rotation: \n %s", sl_rot.getRotationMatrix().getInfos().c_str());
       NODELET_DEBUG("Camera-IMU Translation: \n %g %g %g", sl_tr.x, sl_tr.y, sl_tr.z);
 
-      mPubCamImuTransf.publish(mCameraImuTransfMgs);
+      // mPubCamImuTransf.publish(mCameraImuTransfMgs);
 
-      NODELET_INFO_STREAM("Advertised on topic " << mPubCamImuTransf.getTopic() << " [LATCHED]");
+      // NODELET_INFO_STREAM("Advertised on topic " << mPubCamImuTransf.getTopic() << " [LATCHED]");
     }
 
     if (!mSvoMode && !mSensTimestampSync)
@@ -1659,7 +1659,7 @@ void ZEDWrapperNodelet::publishPose(ros::Time t)
   pose.orientation.z = base2frame.rotation.z;
   pose.orientation.w = base2frame.rotation.w;
 
-  if (mPubPoseCov.getNumSubscribers() > 0)
+  if (false)
   {
     geometry_msgs::PoseWithCovarianceStampedPtr poseCovMsg =
         boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
@@ -1822,7 +1822,7 @@ void ZEDWrapperNodelet::publishDepth(sensor_msgs::ImagePtr imgMsgPtr, sl::Mat de
   {
     // NODELET_INFO("Using float32");
     sl_tools::imageToROSmsg(imgMsgPtr, depth, mDepthOptFrameId, t);
-    mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
+    // mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
 
     return;
   }
@@ -1857,11 +1857,11 @@ void ZEDWrapperNodelet::publishDepth(sensor_msgs::ImagePtr imgMsgPtr, sl::Mat de
   {
     *(data++) = static_cast<uint16_t>(std::round(*(depthDataPtr++) * 1000));  // in mm, rounded
   }
-  mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
+  // mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
 #else
   // NODELET_INFO("Using depth16");
   sl_tools::imageToROSmsg(imgMsgPtr, depth, mDepthOptFrameId, t);
-  mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
+  // mPubDepth.publish(imgMsgPtr, mDepthCamInfoMsg);
 #endif
 }
 
@@ -1983,7 +1983,7 @@ void ZEDWrapperNodelet::publishPointCloud()
   memcpy(ptCloudPtr, (float*)cpu_cloud, 4 * ptsCount * sizeof(float));
 
   // Pointcloud publishing
-  mPubCloud.publish(pointcloudMsg);
+  // mPubCloud.publish(pointcloudMsg);
 }
 
 void ZEDWrapperNodelet::callback_pubFusedPointCloud(const ros::TimerEvent& e)
@@ -2490,9 +2490,9 @@ void ZEDWrapperNodelet::callback_pubVideoDepth(const ros::TimerEvent& e)
   uint32_t leftRawSubnumber = mPubRawLeft.getNumSubscribers();
   uint32_t rightSubnumber = mPubRight.getNumSubscribers();
   uint32_t rightRawSubnumber = mPubRawRight.getNumSubscribers();
-  uint32_t depthSubnumber = mPubDepth.getNumSubscribers();
+  uint32_t depthSubnumber =0;
   uint32_t disparitySubnumber = 0;
-  uint32_t confMapSubnumber = mPubConfMap.getNumSubscribers();
+  uint32_t confMapSubnumber = 0;
   uint32_t stereoRawSubNumber = mPubRight.getNumSubscribers();
   uint32_t stereoSubNumber =  mPubRight.getNumSubscribers();
 
@@ -2708,7 +2708,7 @@ void ZEDWrapperNodelet::callback_pubVideoDepth(const ros::TimerEvent& e)
   {
     sensor_msgs::ImagePtr confMapMsg = boost::make_shared<sensor_msgs::Image>();
     sl_tools::imageToROSmsg(confMapMsg, mat_conf, mConfidenceOptFrameId, stamp);
-    mPubConfMap.publish(confMapMsg);
+    // mPubConfMap.publish(confMapMsg);
   }
 }
 
